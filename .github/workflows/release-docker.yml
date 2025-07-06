@@ -39,8 +39,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
+      - name: Check Docker Hub credentials
+        id: dockerhub_check
+        run: |
+          if [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "available=true" >> $GITHUB_OUTPUT
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+          fi
+
       # Login to Docker Hub
       - name: Login to Docker Hub
+        if: steps.dockerhub_check.outputs.available == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -54,17 +64,22 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prepare Docker tags
+        id: tags
+        run: |
+          TAGS="ghcr.io/${{ github.repository_owner }}/decypharr:latest,ghcr.io/${{ github.repository_owner }}/decypharr:${{ env.tag_name }}"
+          if [ "${{ steps.dockerhub_check.outputs.available }}" = "true" ]; then
+            TAGS="${TAGS},cy01/blackhole:latest,cy01/blackhole:${{ env.tag_name }}"
+          fi
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+
       - name: Build and push release Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
-          tags: |
-            cy01/blackhole:latest
-            cy01/blackhole:${{ env.tag_name }}
-            ghcr.io/${{ github.repository_owner }}/decypharr:latest
-            ghcr.io/${{ github.repository_owner }}/decypharr:${{ env.tag_name }}
+          tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
           build-args: |
