@@ -1,5 +1,14 @@
 # Decypharr
 
+## Fork Info
+
+This is a fork of [sirrobot01/decypharr](https://github.com/sirrobot01/decypharr) that adds the following features:
+
+- [[Docs](docs/docs/features/private-tracker-downloads.md)] Remove torrent tracker URLs from torrents (to allow private tracker torrent downloads)
+
+You can use the docker image `ghcr.io/crashxer/decypharr:beta` to try this fork.
+
+## Original Readme
 ![ui](docs/docs/images/main.png)
 
 **Decypharr** is an implementation of QbitTorrent with **Multiple Debrid service support**, written in Go.
